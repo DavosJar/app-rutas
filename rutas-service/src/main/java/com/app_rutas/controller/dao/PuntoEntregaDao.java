@@ -77,6 +77,6 @@ public class PuntoEntregaDao extends AdapterDao<PuntoEntrega> {
     }
 
     public void setListAll(LinkedList<PuntoEntrega> listAll) {
-        this.listAll = listAll;
+        this.listAll = listAll();
     }
 }

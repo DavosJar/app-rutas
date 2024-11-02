@@ -1,30 +1,33 @@
 package com.app_rutas.rest;
 
 import java.util.HashMap;
-
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.app_rutas.controller.dao.services.PuntoEntregaServices;
+import com.app_rutas.controller.dao.services.OrdenEntregaServices;
 import com.app_rutas.controller.excepcion.ListEmptyException;
-import com.app_rutas.models.PuntoEntrega;
+import com.app_rutas.models.OrdenEntrega;
 
-@Path("/punto-entrega")
-public class PuntoEntregaApi {
+@Path("/orden-entrega")
+public class OrdenEntregaApi {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/all")
-    public Response getAllPuntos() throws ListEmptyException {
+    public Response getAllOrdenEntregas() {
         HashMap<String, Object> res = new HashMap<>();
-        PuntoEntregaServices pes = new PuntoEntregaServices();
+        OrdenEntregaServices pes = new OrdenEntregaServices();
         try {
             res.put("status", "success");
             res.put("message", "Consulta realizada con éxito.");
             res.put("data", pes.listAll().toArray());
             return Response.ok(res).build();
+        } catch (ListEmptyException e) {
+            res.put("status", "error");
+            res.put("message", "Lista de órdenes de entrega está vacía.");
+            return Response.status(Status.NO_CONTENT).entity(res).build();
         } catch (Exception e) {
             res.put("status", "error");
             res.put("message", "Error interno del servidor: " + e.getMessage());
@@ -35,12 +38,13 @@ public class PuntoEntregaApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
-    public Response getPuntoEntregaById(@PathParam("id") Integer id) {
+    public Response getOrdenEntregaById(@PathParam("id") Integer id) {
         HashMap<String, Object> res = new HashMap<>();
-        PuntoEntregaServices pes = new PuntoEntregaServices();
+        OrdenEntregaServices ordenEntregaServices = new OrdenEntregaServices();
         try {
+            OrdenEntrega ordenEntrega = ordenEntregaServices.getOrdenEntregaById(id);
             res.put("status", "success");
-            res.put("data", pes.getPuntoEntregaJsonById(id));
+            res.put("data", ordenEntrega);
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("status", "error");
@@ -52,19 +56,19 @@ public class PuntoEntregaApi {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/save")
-    public Response save(PuntoEntrega puntoEntrega) {
+    public Response save(OrdenEntrega ordenEntrega) {
         HashMap<String, Object> res = new HashMap<>();
-        PuntoEntregaServices pes = new PuntoEntregaServices();
-        pes.setPuntoEntrega(puntoEntrega);
+        OrdenEntregaServices ordenEntregaServices = new OrdenEntregaServices();
+        ordenEntregaServices.setOrdenEntrega(ordenEntrega);
 
         try {
-            if (pes.save()) {
+            if (ordenEntregaServices.save()) {
                 res.put("status", "success");
-                res.put("message", "Punto de entrega registrado correctamente.");
+                res.put("message", "Orden de entrega registrada correctamente.");
                 return Response.ok(res).build();
             } else {
                 res.put("status", "error");
-                res.put("message", "No se pudo registrar el punto de entrega.");
+                res.put("message", "No se pudo registrar la orden de entrega.");
                 return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
             }
         } catch (Exception e) {
@@ -79,9 +83,9 @@ public class PuntoEntregaApi {
     @Path("/{id}/delete")
     public Response delete(@PathParam("id") Integer id) {
         HashMap<String, Object> res = new HashMap<>();
-        PuntoEntregaServices pes = new PuntoEntregaServices();
+        OrdenEntregaServices pes = new OrdenEntregaServices();
         try {
-            pes.getPuntoEntrega().setIdPuntoEntrega(id);
+            pes.getOrdenEntrega().getIdPedido();
             pes.delete();
             res.put("status", "success");
             res.put("message", "Punto de entrega eliminado con éxito.");
@@ -96,18 +100,22 @@ public class PuntoEntregaApi {
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/update")
-    public Response update(PuntoEntrega puntoEntrega, @PathParam("id") Integer id) {
+    public Response update(OrdenEntrega ordenEntrega, @PathParam("id") Integer id) {
         HashMap<String, Object> res = new HashMap<>();
-        PuntoEntregaServices pes = new PuntoEntregaServices();
-
-        puntoEntrega.setIdPuntoEntrega(id);
-        pes.setPuntoEntrega(puntoEntrega);
+        OrdenEntregaServices pes = new OrdenEntregaServices();
+        ordenEntrega.setId(id);
+        pes.setOrdenEntrega(ordenEntrega);
 
         try {
-            pes.update();
-            res.put("status", "success");
-            res.put("message", "Punto de entrega actualizado con éxito.");
-            return Response.ok(res).build();
+            if (pes.update()) {
+                res.put("status", "success");
+                res.put("message", "Orden de entrega actualizada correctamente.");
+                return Response.ok(res).build();
+            } else {
+                res.put("status", "error");
+                res.put("message", "No se pudo actualizar la orden de entrega.");
+                return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            }
         } catch (Exception e) {
             res.put("status", "error");
             res.put("message", "Error interno del servidor: " + e.getMessage());
