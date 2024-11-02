@@ -3,8 +3,6 @@ package com.app_rutas.controller.dao.implement;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
 import java.util.Scanner;
 
 import com.app_rutas.controller.tda.list.LinkedList;
@@ -14,114 +12,83 @@ import com.google.gson.Gson;
 public class AdapterDao<T> implements InterfazDao<T> {
     @SuppressWarnings("FieldMayBeFinal")
     private Class<T> clazz;
-    protected Gson g;
-    public String URL = "media/";
+    private Gson g;
 
-    public AdapterDao(Class<T> clazz) {
+    public static String URL = "media" + File.separator;
+
+    public AdapterDao(Class clazz) {
         this.clazz = clazz;
         this.g = new Gson();
     }
-
+    
     @Override
     public void persist(T object) throws Exception {
         LinkedList<T> list = listAll();
         list.add(object); 
-        
-        String info = "";
-        try {
-            info = g.toJson(list.toArray());
-        } catch (Exception e) {
-            throw new Exception("Error al convertir a JSON");
-        }
+        String info = g.toJson(list.toArray());
         saveFile(info);
     }
+        
     @Override
     public void merge(T object, Integer index) throws Exception {
         LinkedList<T> list = listAll();
-        list.update(object, index);
-        String info = "";
-        try {
-            info = g.toJson(list.toArray());
-        } catch (Exception e) {
-            throw new Exception("Error al convertir a JSON");
+        T[] temp = (T[]) list.toArray();
+        if (index <= 0 || index > temp.length) {
+            throw new IndexOutOfBoundsException("indice fuera de limites");
         }
-        saveFile(info);
+        T actual = temp[index - 1];
+        if (actual == null) {
+            throw new Exception("No existe el objeto en la posicion");
+        }
+        list.update(object, index -  1);
+        String data = g.toJson(list.toArray());
+        saveFile(data);
     }
     @Override
-    public LinkedList<T> listAll() throws Exception {
-        LinkedList<T> list = new LinkedList<>();
+    public LinkedList listAll()  {
+        LinkedList list = new LinkedList<>();
         try {
             String data = readFile();
 
-            Type arrayType = Array.newInstance(clazz, 0).getClass();
-            T[] arrayObjects = g.fromJson(data, arrayType);
-
-            for (T obj : arrayObjects) {
-                if (obj != null) {
-                    list.add(obj);
-                }
-            }
+            T[] matrix = (T[])g.fromJson(data, java.lang.reflect.Array.newInstance(clazz, 0).getClass());
+            list.toList(matrix);
 
         } catch (Exception e) {
-            throw new Exception("Error al convertir a JSON");
+            e.printStackTrace();
         }
         return list;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public T get(Integer id) throws Exception {
-        return listAll().get(id - 1);
+    public T get(Integer index) throws Exception {
+        LinkedList<T> list = listAll();
+        T[] temp = (T[]) list.toArray(); 
+        return temp[index - 1];           
     }
+    @Override
     public void delete(Integer index) throws Exception {
         LinkedList<T> list = listAll();
-        
-        try {
-            list.delete(index);
-        } catch (Exception e) {
-            throw new Exception("Error al eliminar el elemento: " + e.getMessage());
-        }
-
-        String info = "";
-        try {
-            info = g.toJson(list.toArray());
-        } catch (Exception e) {
-            throw new Exception("Error al convertir a JSON");
-        }
+        list.delete(index - 1);
+        String info = g.toJson(list.toArray());
         saveFile(info);
     }
-    private String readFile() throws Exception {
-        File file = new File(URL + clazz.getSimpleName() + ".json");
-        if (!file.exists()) {
-            return "[]"; 
-        }
 
-        StringBuilder sb;
-        try (Scanner in = new Scanner(new FileReader(file))) {
-            sb = new StringBuilder();
-            while (in.hasNext()) {
-                sb.append(in.next());
-            }
+    @SuppressWarnings("ConvertToTryWithResources")
+    private String readFile() throws Exception {
+        Scanner in = new Scanner(new FileReader(URL + clazz.getSimpleName() + ".json"));
+        StringBuilder sb = new StringBuilder();
+        while (in.hasNext()) {
+            sb.append(in.nextLine());
         }
+        in.close();
         return sb.toString();
     }
 
-    private void saveFile(String info) throws Exception {
-        File dir = new File(URL);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        File file = new File(URL + clazz.getSimpleName() + ".json");
-        try (FileWriter f = new FileWriter(file)) {
-            f.write(info);
-            f.flush();
-            f.close();
-        }catch (Exception e){
-            throw new Exception("Error al crear el archivo");
-        }
-    }
-    protected void updateListFile(LinkedList<T> list) throws Exception {
-        String info = g.toJson(list.toArray());
-        saveFile(info);
+    private void saveFile(String data) throws Exception {
+        FileWriter f = new FileWriter(URL + clazz.getSimpleName() + ".json");
+        f.write(data);
+        f.flush();
+        f.close();
     }
 }

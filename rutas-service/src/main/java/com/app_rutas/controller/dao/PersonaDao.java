@@ -5,13 +5,15 @@ import com.app_rutas.controller.tda.list.LinkedList;
 import com.app_rutas.models.Persona;
 import com.app_rutas.models.Sexo;
 import com.app_rutas.models.TipoIdentificacion;
+import com.google.gson.Gson;
 
 public class PersonaDao extends AdapterDao<Persona> {
     private Persona persona;
     private LinkedList<Persona> listAll;
+    private Gson g = new Gson();
     
     public PersonaDao() {
-        super(Persona.class);       
+        super(Persona.class);   
     }
     public Persona getPersona() {
         if(persona == null) {
@@ -19,11 +21,9 @@ public class PersonaDao extends AdapterDao<Persona> {
         }
         return persona;
     }
-
     public void setPersona(Persona persona) {
         this.persona = persona;
     }
-
     public LinkedList<Persona> getListAll() throws Exception {
         if(listAll == null) {
             this.listAll = listAll();
@@ -32,7 +32,7 @@ public class PersonaDao extends AdapterDao<Persona> {
     }
     public Boolean save() throws Exception {
         Integer id = listAll().getSize()+1;
-        getPersona().setId(id);
+        persona.setId(id);
         this.persist(this.persona);
         this.listAll = listAll();
         return true;
@@ -43,22 +43,30 @@ public class PersonaDao extends AdapterDao<Persona> {
         return true;
     }
     public Boolean delete() throws Exception {
+        if (listAll == null) {
+            listAll = listAll(); 
+        }
         this.delete(persona.getId());
-        this.listAll = listAll();
+        reindexIds();
         return true;
     }
-        
-    public String toJson() {
-        return g.toJson(getPersona());
-    }
-    
-    public Persona getPersonaById(Integer id) throws Exception {
-        return get(id);
+    private void reindexIds() throws Exception {
+        LinkedList<Persona> listAll = listAll();
+        for (int i = 0; i < listAll.getSize(); i++) {
+            Persona p = listAll.get(i);
+            p.setId(i + 1);
+            this.merge(p, i + 1);
+        }
     }
 
-    public String getPersonaJsonById(Integer id) throws Exception {
-        return g.toJson(getPersonaById(id));
+    public Persona getPersonaByIndex(Integer Index) throws Exception {
+        return get(Index);
     }
+
+    public String getPersonaJsonByIndex(Integer Index) throws Exception {
+        return g.toJson(get(Index));
+    }
+
     public TipoIdentificacion getTipos(String tipo) {
         return TipoIdentificacion.valueOf(tipo);
     }
@@ -70,5 +78,8 @@ public class PersonaDao extends AdapterDao<Persona> {
     }
     public Sexo[] getSexos(){
         return Sexo.values();
+    }
+    public void setListAll(LinkedList<Persona> listAll) {
+        this.listAll = listAll;
     }
 }

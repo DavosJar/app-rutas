@@ -16,7 +16,7 @@ public class ConductorAsignadoServices {
         return obj.save();
     }
 
-    public LinkedList<ConductorAsignado> listAll() throws Exception {
+    public LinkedList listAll() throws Exception {
         return obj.getListAll();
     }
 
@@ -28,13 +28,12 @@ public class ConductorAsignadoServices {
         obj.setConductorAsignado(conductorAsignado);
     }
 
-
-    public ConductorAsignado getConductorAsignadoById(Integer id) throws Exception  {
-        return obj.getConductorAsignadoById(id);
+    public ConductorAsignado getConductorAsignadoByIndex(Integer index) throws Exception  {
+        return obj.getConductorAsignadoByIndex(index);
     }
     
-    public String getConductorAsignadoJsonById(Integer id) throws Exception {
-        return obj.getConductorAsignadoJsonById(id);
+    public String getConductorAsignadoJsonBy(Integer index) throws Exception {
+        return obj.getConductorAsignadoJsonByIndex(index);
     }
 
     public Boolean update() throws Exception {

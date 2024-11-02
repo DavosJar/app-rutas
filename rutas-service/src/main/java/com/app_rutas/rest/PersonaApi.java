@@ -15,7 +15,6 @@ import javax.ws.rs.core.Response.Status;
 
 import com.app_rutas.controller.dao.services.PersonaServices;
 import com.app_rutas.controller.excepcion.ListEmptyException;
-import com.app_rutas.models.Persona;
 
 @Path("/persona")
 public class PersonaApi {
@@ -28,7 +27,7 @@ public class PersonaApi {
         PersonaServices ps = new PersonaServices();
         try {
             res.put("status", "success");
-            res.put("message", "Consulta realizada con éxito.");
+            res.put("message", "Consulta realizada con exito.");
             res.put("data", ps.listAll().toArray());
             return Response.ok(res).build();
         } catch (Exception e) {
@@ -37,15 +36,15 @@ public class PersonaApi {
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
-
+    
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
-    public Response getPersonaById(@PathParam("id") Integer id) {
+    public Response getPersonaByIndex(@PathParam("id") Integer Index) {
         String jsonResponse = "";
         PersonaServices ps = new PersonaServices();
         try {
-            jsonResponse = ps.getPersonaJsonById(id);
+            jsonResponse = ps.getPersonaJsonByIndex(Index);
             return Response.ok(jsonResponse).build();
         } catch (Exception e) {
             HashMap res = new HashMap<>();
@@ -97,7 +96,7 @@ public class PersonaApi {
     
             ps.save();
             res.put("estado", "Ok");
-            res.put("data", "Registro guardado con éxito.");
+            res.put("data", "Registro guardado con exito.");
             return Response.ok(res).build();
         } catch (IllegalArgumentException e) {
             res.put("estado", "error");
@@ -133,51 +132,29 @@ public class PersonaApi {
     public Response update(HashMap map, @PathParam("id") Integer id) {
         HashMap res = new HashMap<>();
         PersonaServices ps = new PersonaServices();
+
+        ps.getPersona().setId(id);
+        ps.getPersona().setNombre(map.get("nombre").toString());
+        ps.getPersona().setApellido(map.get("apellido").toString());
+        ps.getPersona().setTipoIdentificacion(ps.getTipos(map.get("tipoIdentificacion").toString()));
+        ps.getPersona().setIdentificacion(map.get("identificacion").toString());
+        ps.getPersona().setFechaNacimiento(map.get("fechaNacimiento").toString());
+        ps.getPersona().setDireccion(map.get("direccion").toString());
+        ps.getPersona().setTelefono(map.get("telefono").toString());
+        ps.getPersona().setEmail(map.get("email").toString());
+        ps.getPersona().setSexo(ps.getSexo(map.get("sexo").toString()));
+
         try {
-            Persona persona = ps.getPersonaById(id);
-            if (persona == null) {
-                throw new IllegalArgumentException("El registro no existe.");
-            }
-            if (map.get("nombre") != null) {
-                persona.setNombre(map.get("nombre").toString());
-            }
-            if (map.get("apellido") != null) {
-                persona.setApellido(map.get("apellido").toString());
-            }
-            if (map.get("tipoIdentificacion") != null) {
-                persona.setTipoIdentificacion(ps.getTipos(map.get("tipoIdentificacion").toString()));
-            }
-            if (map.get("identificacion") != null) {
-                persona.setIdentificacion(map.get("identificacion").toString());
-            }
-            if (map.get("fechaNacimiento") != null) {
-                persona.setFechaNacimiento(map.get("fechaNacimiento").toString());
-            }
-            if (map.get("direccion") != null) {
-                persona.setDireccion(map.get("direccion").toString());
-            }
-            if (map.get("telefono") != null) {
-                persona.setTelefono(map.get("telefono").toString());
-            }
-            if (map.get("email") != null) {
-                persona.setEmail(map.get("email").toString());
-            }
-            if (map.get("sexo") != null) {
-                persona.setSexo(ps.getSexo(map.get("sexo").toString()));
-            }
-            ps.setPersona(persona);
             ps.update();
             res.put("estado", "Ok");
-            res.put("data", "Registro actualizado con éxito.");
+            res.put("data", "Registro actualizado con exito.");
             return Response.ok(res).build();
-        } catch (IllegalArgumentException e) {
-            res.put("estado", "error");
-            res.put("data", e.getMessage());
-            return Response.status(Response.Status.BAD_REQUEST).entity(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
             res.put("data", "Error interno del servidor: " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
-        }  
+        }
+
     }
+
 }
