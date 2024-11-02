@@ -4,12 +4,16 @@ import com.app_rutas.controller.dao.implement.AdapterDao;
 import com.app_rutas.controller.tda.list.LinkedList;
 import com.app_rutas.models.ConductorAsignado;
 import com.app_rutas.models.Estado;
+import com.google.gson.Gson;
 
 public class ConductorAsignadoDao extends AdapterDao<ConductorAsignado> {
     private ConductorAsignado conductorAsignado;
     private LinkedList<ConductorAsignado> listAll;
+    
+    private Gson g = new Gson();
+    
     public ConductorAsignadoDao() {
-        super(ConductorAsignado.class);
+        super(ConductorAsignado.class);   
     }
 
     public ConductorAsignado getConductorAsignado() {
@@ -32,7 +36,7 @@ public class ConductorAsignadoDao extends AdapterDao<ConductorAsignado> {
 
     public Boolean save() throws Exception {
         Integer id = listAll().getSize()+1;
-        getConductorAsignado().setId(id);
+        conductorAsignado.setId(id);
         this.persist(this.conductorAsignado);
         this.listAll = listAll();
         return true;
@@ -43,23 +47,31 @@ public class ConductorAsignadoDao extends AdapterDao<ConductorAsignado> {
         this.listAll = listAll();
         return true;
     }
-
+    
     public Boolean delete() throws Exception {
+        if (listAll == null) {
+            listAll = listAll(); 
+        }
         this.delete(conductorAsignado.getId());
-        this.listAll = listAll();
+        reindexIds();
         return true;
     }
 
-    public String toJson() {
-        return g.toJson(getConductorAsignado());
+    private void reindexIds() throws Exception {
+        LinkedList<ConductorAsignado> listAll = listAll();
+        for (int i = 0; i < listAll.getSize(); i++) {
+            ConductorAsignado ca = listAll.get(i);
+            ca.setId(i + 1);
+            this.merge(ca, i + 1);
+        }
     }
     
-    public ConductorAsignado getConductorAsignadoById(Integer id) throws Exception {
-        return get(id);
+    public ConductorAsignado getConductorAsignadoByIndex(Integer index) throws Exception {
+        return get(index);
     }
 
-    public String getConductorAsignadoJsonById(Integer id) throws Exception {
-        return g.toJson(getConductorAsignadoById(id));
+    public String getConductorAsignadoJsonByIndex(Integer index) throws Exception {
+        return g.toJson(getConductorAsignadoByIndex(index));
     }
 
     public String toJsonAll() throws Exception {
@@ -72,6 +84,9 @@ public class ConductorAsignadoDao extends AdapterDao<ConductorAsignado> {
 
     public Estado[] getEstados() {
         return Estado.values();
+    }
+    public void setListAll(LinkedList<ConductorAsignado> listAll) {
+        this.listAll = listAll;
     }
     
 }

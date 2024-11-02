@@ -228,24 +228,27 @@ public class LinkedList <E> {
         }
     }
 
-    public Object[] toArray() {
-  
-    LinkedList<E> tempArray = new LinkedList<>();
-    Node<E> current = head;
-    
-    while (current != null) {
-        tempArray.add(current.getData());  
-        current = current.getNext();
-    }
-    
-    return tempArray.toArray();
-}
-    public static<E> LinkedList<E> toList(E[] matrix) {
-        LinkedList<E> list = new LinkedList<>();
-        for (E data : matrix) {
-            list.add(data);
+    @SuppressWarnings("unchecked")
+    public E[] toArray() {
+        E[] matrix = null;
+        if(!isEmpty()){
+            @SuppressWarnings("rawtypes")
+            Class clazz = head.getData().getClass();
+            matrix = (E[]) java.lang.reflect.Array.newInstance(clazz, size);
+            Node<E> aux = head;
+            for (int i = 0; i < size; i++) {
+                matrix[i] = aux.getData();
+                aux = aux.getNext();
+            }
         }
-        return list;
+        return matrix;
+    }
+    public LinkedList<E> toList(E[] matrix) {
+        reset();
+        for (int i = 0; i < matrix.length; i++) {
+            add(matrix[i]);
+        }
+        return this;
     }
     
 }

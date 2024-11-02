@@ -15,7 +15,8 @@ public class PersonaServices {
         return obj.save();
     }
 
-    public LinkedList<Persona> listAll() throws Exception {
+    @SuppressWarnings("rawtypes")
+    public LinkedList listAll() throws Exception {
         return obj.getListAll();
     }
 
@@ -27,21 +28,17 @@ public class PersonaServices {
         obj.setPersona(persona);
     }
 
-    public String toJson() {
-        return obj.toJson();
-    }
-
-    public Persona getPersonaById(Integer id) throws Exception  {
-        return obj.getPersonaById(id);
-    }
-
-    public String getPersonaJsonById(Integer id) throws Exception {
-        return obj.getPersonaJsonById(id);
+    public Persona getPersonaByIndex(Integer index) throws Exception  {
+        return obj.getPersonaByIndex(index);
     }
 
     public Boolean update() throws Exception {
         return obj.update();
     }
+    public Boolean update(Persona persona) throws Exception {
+        return obj.update();
+    }
+
 
     public Boolean delete() throws Exception {
         return obj.delete();
@@ -50,9 +47,14 @@ public class PersonaServices {
     public TipoIdentificacion getTipos(String tipo) {
         return obj.getTipos(tipo);
     }
+
+    public String getPersonaJsonByIndex(Integer index) throws Exception {
+        return obj.getPersonaJsonByIndex(index);
+    }
     public TipoIdentificacion[] getTipos() {
         return TipoIdentificacion.values();
     }
+
 
     public Sexo getSexo(String sexo) {
         return Sexo.valueOf(sexo);
@@ -62,3 +64,5 @@ public class PersonaServices {
     }
 
 }
+
+
