@@ -1,7 +1,6 @@
 package com.app_rutas.controller.tda.list;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.app_rutas.controller.tda.list.LinkedList;
 
 import com.app_rutas.controller.excepcion.ListEmptyException;
 
@@ -231,7 +230,7 @@ public class LinkedList <E> {
 
     public Object[] toArray() {
   
-    List<Object> tempArray = new ArrayList<>();
+    LinkedList<E> tempArray = new LinkedList<>();
     Node<E> current = head;
     
     while (current != null) {
