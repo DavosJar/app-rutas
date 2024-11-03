@@ -17,7 +17,6 @@ public class PedidoDao extends AdapterDao<Pedido>{
     
 
     public Pedido getPedido(){
-
         if(pedido == null){
             pedido = new Pedido();
         }
