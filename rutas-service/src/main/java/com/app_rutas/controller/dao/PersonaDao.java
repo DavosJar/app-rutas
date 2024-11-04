@@ -20,7 +20,7 @@ public class PersonaDao extends AdapterDao<Persona> {
             persona = new Persona();
         }
         return persona;
-    }
+    }S
     public void setPersona(Persona persona) {
         this.persona = persona;
     }
