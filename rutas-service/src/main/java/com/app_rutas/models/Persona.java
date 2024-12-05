@@ -16,18 +16,6 @@ public class Persona {
 
     public Persona() {}
 
-    public Persona(String nombre, String apellido, TipoIdentificacion tipoIdentificacion, String identificacion, String fechaNacimiento, String direccion, String telefono, String email, Sexo sexo) {
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.tipoIdentificacion = tipoIdentificacion;
-        this.identificacion = identificacion;
-        this.fechaNacimiento = fechaNacimiento;
-        this.direccion = direccion;
-        this.telefono = telefono;
-        this.email = email;
-        this.sexo = sexo;
-    }
-
     public Integer getId() {
         return this.id;
     }

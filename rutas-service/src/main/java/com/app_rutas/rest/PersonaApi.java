@@ -15,6 +15,8 @@ import javax.ws.rs.core.Response.Status;
 
 import com.app_rutas.controller.dao.services.PersonaServices;
 import com.app_rutas.controller.excepcion.ListEmptyException;
+import com.app_rutas.controller.tda.list.LinkedList;
+import com.app_rutas.models.Persona;
 
 @Path("/persona")
 public class PersonaApi {
@@ -22,58 +24,66 @@ public class PersonaApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/list")
-    public Response getAllPersonas() throws ListEmptyException, Exception {
-        HashMap res = new HashMap<>(); 
+    public Response getAllProyects() throws ListEmptyException, Exception {
+        HashMap<String, Object> res = new HashMap<>();
         PersonaServices ps = new PersonaServices();
+        // EventoCrudServices ev = new EventoCrudServices();
         try {
-            res.put("status", "success");
-            res.put("message", "Consulta realizada con exito.");
-            res.put("data", ps.listAll().toArray());
+            res.put("status", "OK");
+            LinkedList<Persona> lista = ps.listAll();
+            res.put("msg", "Consulta exitosa.");
+            res.put("data", lista.toArray());
+            if (lista.isEmpty()) {
+                res.put("data", new Object[] {});
+            }
+            // ev.registrarEvento(TipoCrud.LIST, "Se ha consultado la lista de personas.");
             return Response.ok(res).build();
         } catch (Exception e) {
-            res.put("status", "error");
-            res.put("message", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            res.put("status", "ERROR");
+            res.put("msg", "Error al obtener la lista de personas: " + e.getMessage());
+            // ev.registrarEvento(TipoCrud.LIST, "Error inesperado: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{id}")
-    public Response getPersonaByIndex(@PathParam("id") Integer Index) {
-        String jsonResponse = "";
+    @Path("/get/{id}")
+    public Response getPersonaById(@PathParam("id") Integer id) throws Exception {
+        HashMap<String, Object> map = new HashMap<>();
         PersonaServices ps = new PersonaServices();
         try {
-            jsonResponse = ps.getPersonaJsonByIndex(Index);
-            return Response.ok(jsonResponse).build();
+            map.put("msg", "OK");
+            map.put("data", ps.getPersonaById(id));
+            return Response.ok(map).build();
         } catch (Exception e) {
-            HashMap res = new HashMap<>();
-            res.put("status", "error");
-            res.put("message", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            e.printStackTrace();
+            map.put("msg", "ERROR");
+            map.put("error", "Error inesperado: " + e.getMessage());
+            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(map).build();
         }
     }
 
     @Path("/save")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response save(HashMap map) {
-        HashMap res = new HashMap<>();
+    public Response save(HashMap<String, Object> map) {
+        HashMap<String, Object> res = new HashMap<>();
         PersonaServices ps = new PersonaServices();
-        
+
         try {
             if (map.get("nombre") == null || map.get("nombre").toString().isEmpty()) {
                 throw new IllegalArgumentException("El campo 'nombre' es obligatorio.");
             }
             ps.getPersona().setNombre(map.get("nombre").toString());
-    
+
             if (map.get("apellido") == null || map.get("apellido").toString().isEmpty()) {
                 throw new IllegalArgumentException("El campo 'apellido' es obligatorio.");
             }
             ps.getPersona().setApellido(map.get("apellido").toString());
-    
+
             if (map.get("tipoIdentificacion") != null) {
-                ps.getPersona().setTipoIdentificacion(ps.getTipos(map.get("tipoIdentificacion").toString()));
+                ps.getPersona().setTipoIdentificacion(ps.getTipo(map.get("tipoIdentificacion").toString()));
             }
             if (map.get("identificacion") != null) {
                 ps.getPersona().setIdentificacion(map.get("identificacion").toString());
@@ -93,7 +103,7 @@ public class PersonaApi {
             if (map.get("sexo") != null) {
                 ps.getPersona().setSexo(ps.getSexo(map.get("sexo").toString()));
             }
-    
+
             ps.save();
             res.put("estado", "Ok");
             res.put("data", "Registro guardado con exito.");
@@ -108,53 +118,176 @@ public class PersonaApi {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
+
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{id}/delete/")
-    public Response delete(@PathParam("id") Integer id) {
-        HashMap res = new HashMap<>();
+    @Path("/{id}/delete")
+    public Response delete(@PathParam("id") Integer id) throws Exception {
+
+        HashMap<String, Object> res = new HashMap<>();
         PersonaServices ps = new PersonaServices();
+        // EventoCrudServices ev = new EventoCrudServices();
         try {
             ps.getPersona().setId(id);
             ps.delete();
             res.put("estado", "Ok");
             res.put("data", "Registro eliminado con exito.");
+            // ev.registrarEvento(TipoCrud.DELETE, "Se ha eliminado el persona con id: " +
+            // id);
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
             res.put("data", "Error interno del servidor: " + e.getMessage());
+            // ev.registrarEvento(TipoCrud.DELETE, "Error inesperado: " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
-    @PUT
+
+    @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{id}/update")
-    public Response update(HashMap map, @PathParam("id") Integer id) {
-        HashMap res = new HashMap<>();
+    @Path("/update")
+    public Response update(HashMap<String, Object> map) throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
         PersonaServices ps = new PersonaServices();
+        if (ps.getPersonaById(Integer.valueOf(map.get("id").toString())) != null) {
+            try {
+                if (map.get("nombre") == null || map.get("nombre").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'nombre' es obligatorio.");
+                }
+                if (map.get("apellido") == null || map.get("apellido").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'apellido' es obligatorio.");
+                }
+                if (map.get("tipoIdentificacion") == null || map.get("tipoIdentificacion").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'tipoIdentificacion' es obligatorio.");
+                }
+                if (map.get("identificacion") == null || map.get("identificacion").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'identificacion' es obligatorio.");
+                }
+                if (map.get("fechaNacimiento") == null || map.get("fechaNacimiento").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'fechaNacimiento' es obligatorio.");
+                }
+                if (map.get("direccion") == null || map.get("direccion").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'direccion' es obligatorio.");
+                }
+                if (map.get("telefono") == null || map.get("telefono").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'telefono' es obligatorio.");
+                }
+                if (map.get("email") == null || map.get("email").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'email' es obligatorio.");
+                }
+                if (map.get("sexo") == null || map.get("sexo").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'sexo' es obligatorio.");
+                }
 
-        ps.getPersona().setId(id);
-        ps.getPersona().setNombre(map.get("nombre").toString());
-        ps.getPersona().setApellido(map.get("apellido").toString());
-        ps.getPersona().setTipoIdentificacion(ps.getTipos(map.get("tipoIdentificacion").toString()));
-        ps.getPersona().setIdentificacion(map.get("identificacion").toString());
-        ps.getPersona().setFechaNacimiento(map.get("fechaNacimiento").toString());
-        ps.getPersona().setDireccion(map.get("direccion").toString());
-        ps.getPersona().setTelefono(map.get("telefono").toString());
-        ps.getPersona().setEmail(map.get("email").toString());
-        ps.getPersona().setSexo(ps.getSexo(map.get("sexo").toString()));
+                ps.getPersona().setNombre(map.get("nombre").toString());
+                ps.getPersona().setApellido(map.get("apellido").toString());
+                ps.getPersona().setTipoIdentificacion(ps.getTipo(map.get("tipoIdentificacion").toString()));
+                ps.getPersona().setIdentificacion(map.get("identificacion").toString());
+                ps.getPersona().setFechaNacimiento(map.get("fechaNacimiento").toString());
+                ps.getPersona().setDireccion(map.get("direccion").toString());
+                ps.getPersona().setTelefono(map.get("telefono").toString());
+                ps.getPersona().setEmail(map.get("email").toString());
+                ps.getPersona().setSexo(ps.getSexo(map.get("sexo").toString()));
 
+                ps.update();
+                res.put("estado", "Ok");
+                res.put("data", "Registro actualizado con exito.");
+                return Response.ok(res).build();
+            } catch (Exception e) {
+                res.put("estado", "error");
+                res.put("data", "Error interno del servidor: " + e.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            }
+        } else {
+            res.put("estado", "error");
+            res.put("data", "No se encontro el persona con id: " + map.get("id").toString());
+            return Response.status(Response.Status.NOT_FOUND).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/search/ident/{identificacion}")
+    public Response searchPersona(@PathParam("identificacion") String identificacion) throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PersonaServices ps = new PersonaServices();
         try {
-            ps.update();
             res.put("estado", "Ok");
-            res.put("data", "Registro actualizado con exito.");
+            res.put("data", ps.obtenerPersonaPor("identificacion", identificacion));
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
             res.put("data", "Error interno del servidor: " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
-
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/search/{atributo}/{valor}")
+    public Response buscarPersonas(@PathParam("atributo") String atributo, @PathParam("valor") String valor)
+            throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PersonaServices ps = new PersonaServices();
+        try {
+            res.put("estado", "Ok");
+            res.put("data", ps.obtenerPersonaPor("identificacion", valor));
+            return Response.ok(res).build();
+        } catch (Exception e) {
+            res.put("estado", "error");
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/order/{atributo}/{orden}")
+    public Response ordenarPersonas(@PathParam("atributo") String atributo, @PathParam("orden") Integer orden)
+            throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PersonaServices ps = new PersonaServices();
+        try {
+            res.put("estado", "Ok");
+            res.put("data", ps.order(atributo, orden));
+            return Response.ok(res).build();
+        } catch (Exception e) {
+            res.put("estado", "error");
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sexo")
+    public Response getSexo() throws ListEmptyException, Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        PersonaServices ps = new PersonaServices();
+        map.put("msg", "OK");
+        map.put("data", ps.getSexos());
+        return Response.ok(map).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/tipoidentificacion")
+    public Response geTipos() throws ListEmptyException, Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        PersonaServices ps = new PersonaServices();
+        map.put("msg", "OK");
+        map.put("data", ps.getTipos());
+        return Response.ok(map).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/criterios")
+    public Response getCriterios() throws ListEmptyException, Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        PersonaServices ps = new PersonaServices();
+        map.put("msg", "OK");
+        map.put("data", ps.getPersonaAttributeLists());
+        return Response.ok(map).build();
+    }
 }
