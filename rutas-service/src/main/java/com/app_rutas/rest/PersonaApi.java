@@ -5,7 +5,6 @@ import java.util.HashMap;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -15,8 +14,6 @@ import javax.ws.rs.core.Response.Status;
 
 import com.app_rutas.controller.dao.services.PersonaServices;
 import com.app_rutas.controller.excepcion.ListEmptyException;
-import com.app_rutas.controller.tda.list.LinkedList;
-import com.app_rutas.models.Persona;
 
 @Path("/persona")
 public class PersonaApi {
@@ -30,10 +27,9 @@ public class PersonaApi {
         // EventoCrudServices ev = new EventoCrudServices();
         try {
             res.put("status", "OK");
-            LinkedList<Persona> lista = ps.listAll();
             res.put("msg", "Consulta exitosa.");
-            res.put("data", lista.toArray());
-            if (lista.isEmpty()) {
+            res.put("data", ps.listAll().toArray());
+            if (ps.listAll().isEmpty()) {
                 res.put("data", new Object[] {});
             }
             // ev.registrarEvento(TipoCrud.LIST, "Se ha consultado la lista de personas.");
@@ -55,6 +51,11 @@ public class PersonaApi {
         try {
             map.put("msg", "OK");
             map.put("data", ps.getPersonaById(id));
+            if (ps.getPersonaById(id) == null) {
+                map.put("msg", "ERROR");
+                map.put("error", "No se encontro el persona con id: " + id);
+                return Response.status(Status.NOT_FOUND).entity(map).build();
+            }
             return Response.ok(map).build();
         } catch (Exception e) {
             e.printStackTrace();
@@ -151,6 +152,9 @@ public class PersonaApi {
         PersonaServices ps = new PersonaServices();
         if (ps.getPersonaById(Integer.valueOf(map.get("id").toString())) != null) {
             try {
+                if (map.get("id") == null || map.get("id").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'id' es obligatorio.");
+                }
                 if (map.get("nombre") == null || map.get("nombre").toString().isEmpty()) {
                     throw new IllegalArgumentException("El campo 'nombre' es obligatorio.");
                 }
@@ -178,7 +182,8 @@ public class PersonaApi {
                 if (map.get("sexo") == null || map.get("sexo").toString().isEmpty()) {
                     throw new IllegalArgumentException("El campo 'sexo' es obligatorio.");
                 }
-
+                System.out.println("falta alguin dato");
+                ps.setPersona(ps.getPersonaById(Integer.valueOf(map.get("id").toString())));
                 ps.getPersona().setNombre(map.get("nombre").toString());
                 ps.getPersona().setApellido(map.get("apellido").toString());
                 ps.getPersona().setTipoIdentificacion(ps.getTipo(map.get("tipoIdentificacion").toString()));
@@ -214,6 +219,11 @@ public class PersonaApi {
         try {
             res.put("estado", "Ok");
             res.put("data", ps.obtenerPersonaPor("identificacion", identificacion));
+            if (ps.obtenerPersonaPor(identificacion, ps) == null) {
+                res.put("estado", "error");
+                res.put("data", "No se encontro el persona con identificacion: " + identificacion);
+                return Response.status(Response.Status.NOT_FOUND).entity(res).build();
+            }
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
@@ -231,7 +241,10 @@ public class PersonaApi {
         PersonaServices ps = new PersonaServices();
         try {
             res.put("estado", "Ok");
-            res.put("data", ps.obtenerPersonaPor("identificacion", valor));
+            res.put("data", ps.getPersonasBy(atributo, valor).toArray());
+            if (ps.getPersonasBy(atributo, valor).isEmpty()) {
+                res.put("data", new Object[] {});
+            }
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
@@ -249,7 +262,10 @@ public class PersonaApi {
         PersonaServices ps = new PersonaServices();
         try {
             res.put("estado", "Ok");
-            res.put("data", ps.order(atributo, orden));
+            res.put("data", ps.order(atributo, orden).toArray());
+            if (ps.order(atributo, orden).isEmpty()) {
+                res.put("data", new Object[] {});
+            }
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("estado", "error");

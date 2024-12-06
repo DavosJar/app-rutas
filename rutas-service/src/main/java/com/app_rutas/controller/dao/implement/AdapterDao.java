@@ -61,38 +61,39 @@ public class AdapterDao<T> implements InterfazDao<T> {
         return list;
     }
 
-    @Override
     public T get(Integer id) throws Exception {
-        T obj = null;
         LinkedList<T> list = listAll();
 
-        if (!list.isEmpty()) {
-            T[] matrix = list.toArray();
-            int inicio = 0;
-            int fin = matrix.length - 1;
+        if (list.isEmpty()) {
+            return null;
+        }
 
-            Integer minId = getIdent(matrix[0]);
-            Integer maxId = getIdent(matrix[matrix.length - 1]);
-            if (id < minId || id > maxId) {
-                return null;
-            }
+        T[] matrix = list.toArray();
 
-            while (inicio <= fin) {
-                int medio = (inicio + fin) / 2;
-                T candidato = matrix[medio];
-                Integer ident = getIdent(candidato);
+        Integer minId = getIdent(matrix[0]);
+        Integer maxId = getIdent(matrix[matrix.length - 1]);
+        if (id < minId || id > maxId) {
+            return null;
+        }
 
-                if (ident.equals(id)) {
-                    return candidato;
-                } else if (ident < id) {
-                    inicio = medio + 1;
-                } else {
-                    fin = medio - 1;
-                }
+        int inicio = 0;
+        int fin = matrix.length - 1;
+
+        while (inicio <= fin) {
+            int medio = (inicio + fin) / 2;
+            T candidato = matrix[medio];
+            Integer ident = getIdent(candidato);
+
+            if (ident.equals(id)) {
+                return candidato;
+            } else if (ident < id) {
+                inicio = medio + 1;
+            } else {
+                fin = medio - 1;
             }
         }
 
-        return obj;
+        return null;
     }
 
     private Integer getIdent(T obj) throws Exception {

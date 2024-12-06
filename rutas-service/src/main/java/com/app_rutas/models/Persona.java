@@ -13,8 +13,8 @@ public class Persona {
     private String email;
     private Sexo sexo;
 
-
-    public Persona() {}
+    public Persona() {
+    }
 
     public Integer getId() {
         return this.id;
