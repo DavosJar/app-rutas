@@ -7,62 +7,78 @@ import com.app_rutas.models.Sexo;
 import com.app_rutas.models.TipoIdentificacion;
 
 public class PersonaServices {
-    private PersonaDao obj;
-    public PersonaServices() {
-        this.obj = new PersonaDao();
-    }
-    public Boolean save() throws Exception {
-        return obj.save();
-    }
 
-    @SuppressWarnings("rawtypes")
-    public LinkedList listAll() throws Exception {
-        return obj.getListAll();
+    @SuppressWarnings("FieldMayBeFinal")
+    private PersonaDao obj;
+
+    public PersonaServices() {
+        obj = new PersonaDao();
     }
 
     public Persona getPersona() {
         return obj.getPersona();
     }
 
-    public void setPersona(Persona persona) {
-        obj.setPersona(persona);
+    public Boolean save() throws Exception {
+        return obj.save();
     }
-
-    public Persona getPersonaByIndex(Integer index) throws Exception  {
-        return obj.getPersonaByIndex(index);
-    }
-
-    public Boolean update() throws Exception {
-        return obj.update();
-    }
-    public Boolean update(Persona persona) throws Exception {
-        return obj.update();
-    }
-
 
     public Boolean delete() throws Exception {
         return obj.delete();
     }
 
-    public TipoIdentificacion getTipos(String tipo) {
-        return obj.getTipos(tipo);
+    public LinkedList<Persona> listAll() throws Exception {
+        return obj.getListAll();
     }
 
-    public String getPersonaJsonByIndex(Integer index) throws Exception {
-        return obj.getPersonaJsonByIndex(index);
+    public void setPersona(Persona Pprsona) {
+        obj.setPersona(Pprsona);
     }
+
+    public Persona getPersonaById(Integer id) throws Exception {
+        return obj.getPersonaById(id);
+
+    }
+
+    public String toJson() throws Exception {
+        return obj.toJson();
+
+    }
+
+    public LinkedList<Persona> getPersonasBy(String atributo, Object valor) throws Exception {
+        return obj.buscar(atributo, valor);
+    }
+
+    public LinkedList<Persona> order(String atributo, Integer type) throws Exception {
+        return obj.order(atributo, type);
+    }
+
+    public Persona obtenerPersonaPor(String atributo, Object valor) throws Exception {
+        return obj.buscarPor(atributo, valor);
+    }
+
+    public Boolean update() throws Exception {
+        return obj.update();
+    }
+
+    public TipoIdentificacion getTipo(String tipo) {
+        return obj.getTipo(tipo);
+    }
+
     public TipoIdentificacion[] getTipos() {
-        return TipoIdentificacion.values();
+        return obj.getTipos();
     }
-
 
     public Sexo getSexo(String sexo) {
-        return Sexo.valueOf(sexo);
+        return obj.getSexo(sexo);
     }
+
     public Sexo[] getSexos() {
-        return Sexo.values();
+        return obj.getSexos();
+    }
+
+    public String[] getPersonaAttributeLists() {
+        return obj.getPersonaAttributeLists();
     }
 
 }
-
-
