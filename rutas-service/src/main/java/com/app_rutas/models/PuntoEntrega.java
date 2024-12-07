@@ -1,31 +1,22 @@
 package com.app_rutas.models;
 
 public class PuntoEntrega {
-    private Integer idPuntoEntrega;
+    private Integer id;
     private String ciudad;
     private Double latitud;
     private Double longitud;
     private String direccion;
     private String ubicacionActual;
 
-    public PuntoEntrega(){
+    public PuntoEntrega() {
     }
 
-    public PuntoEntrega(Integer idPuntoEntrega,String ciudad, Double latitud, Double longitud, String direccion, String ubicacionActual){
-        this.idPuntoEntrega = idPuntoEntrega;
-        this.ciudad = ciudad;
-        this.latitud = latitud;
-        this.longitud = longitud;
-        this.direccion = direccion;
-        this.ubicacionActual = ubicacionActual;
+    public Integer getId() {
+        return this.id;
     }
 
-    public Integer getIdPuntoEntrega() {
-        return this.idPuntoEntrega;
-    }
-
-    public void setIdPuntoEntrega(int idPuntoEntrega) {
-        this.idPuntoEntrega = idPuntoEntrega;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getCiudad() {

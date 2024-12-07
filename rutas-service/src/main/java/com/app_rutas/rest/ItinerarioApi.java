@@ -2,21 +2,19 @@ package com.app_rutas.rest;
 
 import java.util.HashMap;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE; 
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import com.app_rutas.controller.dao.services.ItinerarioServices;
 import com.app_rutas.controller.excepcion.ListEmptyException;
-import com.app_rutas.models.Itinerario;
+import com.app_rutas.models.EstadoItinerario;
 
 @Path("/itinerario")
 public class ItinerarioApi {
@@ -24,159 +22,234 @@ public class ItinerarioApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/list")
-
-    public Response getAllItinerios() throws ListEmptyException, Exception {
-        HashMap res = new HashMap<>();
-        ItinerarioServices is = new ItinerarioServices();
+    public Response getAllProyects() throws ListEmptyException, Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        ItinerarioServices ps = new ItinerarioServices();
+        // EventoCrudServices ev = new EventoCrudServices();
         try {
-            res.put("estado", "success");
-            res.put("mensaje", "Consulta realizada con exito.");
-            res.put("data", is.listAll().toArray());
+            res.put("status", "OK");
+            res.put("msg", "Consulta exitosa.");
+            res.put("data", ps.listAll().toArray());
+            if (ps.listAll().isEmpty()) {
+                res.put("data", new Object[] {});
+            }
+            // ev.registrarEvento(TipoCrud.LIST, "Se ha consultado la lista de
+            // itinerarios.");
             return Response.ok(res).build();
         } catch (Exception e) {
-            res.put("estado", "error");
-            res.put("data", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            res.put("status", "ERROR");
+            res.put("msg", "Error al obtener la lista de itinerarios: " + e.getMessage());
+            // ev.registrarEvento(TipoCrud.LIST, "Error inesperado: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{id}")
-
-    public Response getItinerarioByIndex(@PathParam("id") Integer Index) {
-        String jsonResponse = "";
-        ItinerarioServices is = new ItinerarioServices();
+    @Path("/get/{id}")
+    public Response getItinerarioById(@PathParam("id") Integer id) throws Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        ItinerarioServices ps = new ItinerarioServices();
         try {
-            jsonResponse = is.getItinerarioJsonByIndex(Index);
-            return Response.ok(jsonResponse).build();
+            map.put("msg", "OK");
+            map.put("data", ps.getItinerarioById(id));
+            if (ps.getItinerarioById(id) == null) {
+                map.put("msg", "ERROR");
+                map.put("error", "No se encontro el itinerario con id: " + id);
+                return Response.status(Status.NOT_FOUND).entity(map).build();
+            }
+            return Response.ok(map).build();
         } catch (Exception e) {
-            HashMap res = new HashMap<>();
-            res.put("estado", "error");
-            res.put("estado", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            e.printStackTrace();
+            map.put("msg", "ERROR");
+            map.put("error", "Error inesperado: " + e.getMessage());
+            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(map).build();
         }
     }
+    /*
+     * private String horaInicio;
+     * private String duracionEstimada;
+     * private String fecha;
+     * private Integer idConductorAsignado;
+     * private EstadoItinerario estado;
+     */
 
-    @POST
     @Path("/save")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response save(Itinerario itinerario) {
+    public Response save(HashMap<String, Object> map) {
         HashMap<String, Object> res = new HashMap<>();
-        ItinerarioServices is = new ItinerarioServices();
-
-        // Verificar que el objeto itinerario no sea nulo
-        if (itinerario == null) {
-            res.put("estado", "error");
-            res.put("data", "El itinerario no puede ser nulo.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
-        }
-
-        // Verificar que los campos obligatorios no sean nulos o vacíos
-        if (itinerario.getHoraInicio() == null || itinerario.getHoraInicio().isEmpty()) {
-            res.put("estado", "error");
-            res.put("data", "La hora de inicio no puede ser nula o vacía.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
-        }
-        
-        if (itinerario.getDuracionEstimada() == null || itinerario.getDuracionEstimada().isEmpty()) {
-            res.put("estado", "error");
-            res.put("data", "La duración estimada no puede ser nula o vacía.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
-        }
-
-        if (itinerario.getFecha() == null || itinerario.getFecha().isEmpty()) {
-            res.put("estado", "error");
-            res.put("data", "La fecha no puede ser nula o vacía.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
-        }
-
-        // Validar el idConductorAsignado
-        if (itinerario.getIdConductorAsignado() == null) {
-            res.put("estado", "error");
-            res.put("data", "El ID del conductor asignado no puede ser nulo.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
-        }
-
-        // Validar el estado
-        if (itinerario.getEstado() == null) {
-            res.put("estado", "error");
-            res.put("data", "El estado no puede ser nulo.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
-        }
+        ItinerarioServices ps = new ItinerarioServices();
 
         try {
-            is.setItinerario(itinerario);
-            is.save();
+            if (map.get("horaInicio") == null || map.get("duracionEstimada") == null || map.get("fecha") == null
+                    || map.get("idConductorAsignado") == null || map.get("estado") == null) {
+                throw new IllegalArgumentException("Faltan datos.");
+            }
+            ps.getItinerario().setHoraInicio(map.get("horaInicio").toString());
+            ps.getItinerario().setDuracionEstimada(map.get("duracionEstimada").toString());
+            ps.getItinerario().setFecha(map.get("fecha").toString());
+            ps.getItinerario().setIdConductorAsignado(Integer.valueOf(map.get("idConductorAsignado").toString()));
+            ps.getItinerario().setEstado(EstadoItinerario.valueOf(map.get("estado").toString()));
 
-            res.put("estado", "success");
-            res.put("data", "Itinerario guardado con éxito.");
+            ps.save();
+            res.put("estado", "Ok");
+            res.put("data", "Registro guardado con exito.");
             return Response.ok(res).build();
+        } catch (IllegalArgumentException e) {
+            res.put("estado", "error");
+            res.put("data", e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
             res.put("data", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
-
 
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/delete")
-    public Response delete(@PathParam("id") Integer Index) {
-        HashMap res = new HashMap<>();
-        ItinerarioServices is = new ItinerarioServices();
+    public Response delete(@PathParam("id") Integer id) throws Exception {
+
+        HashMap<String, Object> res = new HashMap<>();
+        ItinerarioServices ps = new ItinerarioServices();
         try {
-            is.getItinerario().setId(Index);
-            is.delete();
-            res.put("estado", "success");
-            res.put("data", "Itinerario eliminado con exito.");
+            ps.getItinerario().setId(id);
+            ps.delete();
+            res.put("estado", "Ok");
+            res.put("data", "Registro eliminado con exito.");
+
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
             res.put("data", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
-    @PUT
+
+    @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{id}/update")
-    public Response update(@PathParam("id") Integer id, Itinerario itinerario) {
+    @Path("/update")
+    public Response update(HashMap<String, Object> map) throws Exception {
         HashMap<String, Object> res = new HashMap<>();
-        ItinerarioServices is = new ItinerarioServices();
-        
-        // Verifica que el objeto itinerario no sea nulo
-        if (itinerario == null) {
+        ItinerarioServices ps = new ItinerarioServices();
+        if (ps.getItinerarioById(Integer.valueOf(map.get("id").toString())) != null) {
+            try {
+                if (ps.getItinerarioById(Integer.valueOf(map.get("id").toString())) == null) {
+                    ps.getItinerario().setId(Integer.valueOf(map.get("id").toString()));
+                }
+                if (map.get("horaInicio") != null) {
+                    ps.getItinerario().setHoraInicio(map.get("horaInicio").toString());
+                }
+
+                if (map.get("duracionEstimada") != null) {
+                    ps.getItinerario().setDuracionEstimada(map.get("duracionEstimada").toString());
+                }
+
+                if (map.get("fecha") != null) {
+                    ps.getItinerario().setFecha(map.get("fecha").toString());
+                }
+
+                if (map.get("idConductorAsignado") != null) {
+                    ps.getItinerario()
+                            .setIdConductorAsignado(Integer.valueOf(map.get("idConductorAsignado").toString()));
+                }
+
+                if (map.get("estado") != null) {
+                    ps.getItinerario().setEstado(EstadoItinerario.valueOf(map.get("estado").toString()));
+                }
+
+                System.out.println("falta alguin dato");
+                ps.setItinerario(ps.getItinerarioById(Integer.valueOf(map.get("id").toString())));
+                ps.update();
+                res.put("estado", "Ok");
+                res.put("data", "Registro actualizado con exito.");
+                return Response.ok(res).build();
+            } catch (Exception e) {
+                res.put("estado", "error");
+                res.put("data", "Error interno del servidor: " + e.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            }
+        } else {
             res.put("estado", "error");
-            res.put("data", "El itinerario no puede ser nulo.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
+            res.put("data", "No se encontro el itinerario con id: " + map.get("id").toString());
+            return Response.status(Response.Status.NOT_FOUND).entity(res).build();
         }
+    }
 
-        // Configura el ID
-        itinerario.setId(id);
-
-        // Aquí puedes realizar las validaciones necesarias
-        if (itinerario.getHoraInicio() == null || itinerario.getHoraInicio().isEmpty()) {
-            res.put("estado", "error");
-            res.put("data", "La hora de inicio no puede ser nula o vacía.");
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
-        }
-
-        // Repite las validaciones para otros campos...
-
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/search/ident/{identificacion}")
+    public Response searchItinerario(@PathParam("identificacion") String identificacion) throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        ItinerarioServices ps = new ItinerarioServices();
         try {
-            is.setItinerario(itinerario);
-            is.update();
-            res.put("estado", "success");
-            res.put("message", "Itinerario actualizado con éxito.");
+            res.put("estado", "Ok");
+            res.put("data", ps.obtenerItinerarioPor("identificacion", identificacion));
+            if (ps.obtenerItinerarioPor(identificacion, ps) == null) {
+                res.put("estado", "error");
+                res.put("data", "No se encontro el itinerario con identificacion: " + identificacion);
+                return Response.status(Response.Status.NOT_FOUND).entity(res).build();
+            }
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
-            res.put("message", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/search/{atributo}/{valor}")
+    public Response buscarItinerarios(@PathParam("atributo") String atributo, @PathParam("valor") String valor)
+            throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        ItinerarioServices ps = new ItinerarioServices();
+        try {
+            res.put("estado", "Ok");
+            res.put("data", ps.getItinerariosBy(atributo, valor).toArray());
+            if (ps.getItinerariosBy(atributo, valor).isEmpty()) {
+                res.put("data", new Object[] {});
+            }
+            return Response.ok(res).build();
+        } catch (Exception e) {
+            res.put("estado", "error");
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/order/{atributo}/{orden}")
+    public Response ordenarItinerarios(@PathParam("atributo") String atributo, @PathParam("orden") Integer orden)
+            throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        ItinerarioServices ps = new ItinerarioServices();
+        try {
+            res.put("estado", "Ok");
+            res.put("data", ps.order(atributo, orden).toArray());
+            if (ps.order(atributo, orden).isEmpty()) {
+                res.put("data", new Object[] {});
+            }
+            return Response.ok(res).build();
+        } catch (Exception e) {
+            res.put("estado", "error");
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/criterios")
+    public Response getCriterios() throws ListEmptyException, Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        ItinerarioServices ps = new ItinerarioServices();
+        map.put("msg", "OK");
+        map.put("data", ps.getItinerarioAttributeLists());
+        return Response.ok(map).build();
+    }
 }

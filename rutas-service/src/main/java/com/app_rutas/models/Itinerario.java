@@ -7,18 +7,8 @@ public class Itinerario {
     private String fecha;
     private Integer idConductorAsignado;
     private EstadoItinerario estado;
-    
-
 
     public Itinerario() {
-    }
-
-    public Itinerario(String horaInicio, String duracionEstimada, String fecha, Integer idConductorAsignado, EstadoItinerario estado) {
-        this.horaInicio = horaInicio;
-        this.duracionEstimada = duracionEstimada;
-        this.fecha = fecha;
-        this.idConductorAsignado = idConductorAsignado;
-        this.estado = estado;
     }
 
     public Integer getId() {
@@ -28,7 +18,6 @@ public class Itinerario {
     public void setId(Integer id) {
         this.id = id;
     }
-
 
     public String getHoraInicio() {
         return horaInicio;

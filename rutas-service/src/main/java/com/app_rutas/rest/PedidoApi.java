@@ -5,7 +5,6 @@ import java.util.HashMap;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -17,69 +16,77 @@ import com.app_rutas.controller.dao.services.PedidoServices;
 import com.app_rutas.controller.excepcion.ListEmptyException;
 
 @Path("/pedido")
-
 public class PedidoApi {
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/list")
-
-    public Response getAllPedido() throws ListEmptyException, Exception{
-        HashMap res = new HashMap<>();
-        PedidoServices pe = new PedidoServices();
-        try{
-            res.put("estado", "success");
-            res.put("mensaje", "Consulta realizada con exito.");
-            res.put("data", pe.listAll().toArray());
+    public Response getAllProyects() throws ListEmptyException, Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        try {
+            res.put("status", "OK");
+            res.put("msg", "Consulta exitosa.");
+            res.put("data", ps.listAll().toArray());
+            if (ps.listAll().isEmpty()) {
+                res.put("data", new Object[] {});
+            }
             return Response.ok(res).build();
         } catch (Exception e) {
-            res.put("estado", "error");
-            res.put("data", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            res.put("status", "ERROR");
+            res.put("msg", "Error al obtener la lista de pedidos: " + e.getMessage());
+            // ev.registrarEvento(TipoCrud.LIST, "Error inesperado: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
-
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{id}")
-
-    public Response getPedidoByIndex(@PathParam("id") Integer Index){
-        String jsonResponse = "";
-        PedidoServices pe = new PedidoServices();
-        try{
-            jsonResponse = pe.getPedidoJsonByIndex(Index);
-            return Response.ok(jsonResponse).build();
-        }catch(Exception e){
-            HashMap res = new HashMap<>();
-            res.put("estado", "error");
-            res.put("estado", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+    @Path("/get/{id}")
+    public Response getPedidoById(@PathParam("id") Integer id) throws Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        try {
+            map.put("msg", "OK");
+            map.put("data", ps.getPedidoById(id));
+            if (ps.getPedidoById(id) == null) {
+                map.put("msg", "ERROR");
+                map.put("error", "No se encontro el pedido con id: " + id);
+                return Response.status(Status.NOT_FOUND).entity(map).build();
+            }
+            return Response.ok(map).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            map.put("msg", "ERROR");
+            map.put("error", "Error inesperado: " + e.getMessage());
+            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(map).build();
         }
     }
 
+    @Path("/save")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/save") 
-    public Response save(HashMap map) {
-        HashMap res = new HashMap<>();
-        PedidoServices pe = new PedidoServices();
-            try{
+    public Response save(HashMap<String, Object> map) {
+        HashMap<String, Object> res = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
 
-            if(map.get("idPersona") == null || map.get("idPersona").toString().isEmpty()){
-                throw new IllegalArgumentException("Este campo es obligatorio.");
+        try {
+            if (map.get("idCliente") != null && !map.get("idCliente").toString().isEmpty()) {
+                ps.getPedido().setIdCliente(Integer.valueOf(map.get("idCliente").toString()));
+
             }
-            pe.getPedido().setIdCliente(Integer.valueOf(map.get("idPersona").toString()));
-            if(map.get("contenido")!= null){
-                pe.getPedido().setContenido(pe.getTipoContenido(map.get("contenido").toString()));
+            if (map.get("contenido") != null && !map.get("contenido").toString().isEmpty()) {
+                ps.getPedido().setContenido(ps.getTipo(map.get("contenido").toString()));
             }
-            if(map.get("requiereFrio")== null){
-                pe.getPedido().setRequiereFrio(false);   
-        }
-            pe.save();
-            res.put("estado", "success");
+            if (map.get("requiereFrio") != null && !map.get("requiereFrio").toString().isEmpty()) {
+                ps.getPedido().setRequiereFrio(Boolean.parseBoolean(map.get("requiereFrio").toString()));
+            }
+
+            ps.save();
+            res.put("estado", "Ok");
             res.put("data", "Registro guardado con exito.");
             return Response.ok(res).build();
-        }catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             res.put("estado", "error");
             res.put("data", e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(res).build();
@@ -88,65 +95,152 @@ public class PedidoApi {
             res.put("data", "Error interno del servidor: " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
-            
     }
 
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/delete")
-    public Response delete(@PathParam("id") Integer id){
-        HashMap res = new HashMap<>();
-        PedidoServices pe = new PedidoServices();
+    public Response delete(@PathParam("id") Integer id) throws Exception {
 
-        try{
-            pe.getPedido().setId(id);
-            pe.delete();
-            res.put("estado","success");
-            res.put("data", "Registro eliminado con exito.");
-            return Response.ok(res).build();
-        }catch(Exception e){
-            res.put("estado", "error");
-            res.put("data", "Error interno del servidor"+ e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
-        }
-    }
-
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{id}/update")
-    public Response update(HashMap<String, Object> map, @PathParam("id") Integer id) {
-        HashMap<String, String> res = new HashMap<>();
-        PedidoServices pe = new PedidoServices();
-    
+        HashMap<String, Object> res = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
         try {
-            // Validación básica del mapa de entrada
-            if (map == null || !map.containsKey("IdCliente") || !map.containsKey("contenido") || !map.containsKey("requiereFrio")) {
-                res.put("estado", "error");
-                res.put("data", "Parámetros insuficientes.");
-                return Response.status(Status.BAD_REQUEST).entity(res).build();
-            }
-    
-            // Asignación de valores con parseo adecuado y manejo de posibles excepciones
-            pe.getPedido().setId(id);
-            pe.getPedido().setIdCliente(Integer.parseInt(map.get("IdCliente").toString()));
-            pe.getPedido().setContenido(pe.getTipoContenido(map.get("contenido").toString()));
-            pe.getPedido().setRequiereFrio(Boolean.parseBoolean(map.get("requiereFrio").toString()));
-    
-            // Actualización del pedido
-            pe.update();
-            res.put("estado", "success");
-            res.put("data", "Registro actualizado con éxito.");
+            ps.getPedido().setId(id);
+            ps.delete();
+            res.put("estado", "Ok");
+            res.put("data", "Registro eliminado con exito.");
+
             return Response.ok(res).build();
-        } catch (NumberFormatException e) {
-            res.put("estado", "error");
-            res.put("data", "Error en el formato de los datos: " + e.getMessage());
-            return Response.status(Status.BAD_REQUEST).entity(res).build();
         } catch (Exception e) {
             res.put("estado", "error");
             res.put("data", "Error interno del servidor: " + e.getMessage());
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
-    
 
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/update")
+    public Response update(HashMap<String, Object> map) throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        if (ps.getPedidoById(Integer.valueOf(map.get("id").toString())) != null) {
+            try {
+                if (map.get("id") == null || map.get("id").toString().isEmpty()) {
+                    throw new IllegalArgumentException("El campo 'id' es obligatorio.");
+                }
+                ps.setPedido(ps.getPedidoById(Integer.valueOf(map.get("id").toString())));
+                if (map.get("idCliente") != null && !map.get("idCliente").toString().isEmpty()) {
+                    ps.getPedido().setId(Integer.parseInt(map.get("idCliente").toString()));
+                }
+
+                if (map.get("contenido") != null && !map.get("contenido").toString().isEmpty()) {
+                    ps.getPedido().setContenido(ps.getTipo(map.get("contenido").toString()));
+                }
+
+                if (map.get("requiereFrio") != null && !map.get("requiereFrio").toString().isEmpty()) {
+                    ps.getPedido().setRequiereFrio(Boolean.parseBoolean(map.get("requiereFrio").toString()));
+                }
+
+                ps.update();
+                res.put("estado", "Ok");
+                res.put("data", "Registro actualizado con exito.");
+                return Response.ok(res).build();
+            } catch (Exception e) {
+                res.put("estado", "error");
+                res.put("data", "Error interno del servidor: " + e.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+            }
+        } else {
+            res.put("estado", "error");
+            res.put("data", "No se encontro el pedido con id: " + map.get("id").toString());
+            return Response.status(Response.Status.NOT_FOUND).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/search/ident/{identificacion}")
+    public Response searchPedido(@PathParam("identificacion") String identificacion) throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        try {
+            res.put("estado", "Ok");
+            res.put("data", ps.obtenerPedidoPor("identificacion", identificacion));
+            if (ps.obtenerPedidoPor(identificacion, ps) == null) {
+                res.put("estado", "error");
+                res.put("data", "No se encontro el pedido con identificacion: " + identificacion);
+                return Response.status(Response.Status.NOT_FOUND).entity(res).build();
+            }
+            return Response.ok(res).build();
+        } catch (Exception e) {
+            res.put("estado", "error");
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/search/{atributo}/{valor}")
+    public Response buscarPedidos(@PathParam("atributo") String atributo, @PathParam("valor") String valor)
+            throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        try {
+            res.put("estado", "Ok");
+            res.put("data", ps.getPedidosBy(atributo, valor).toArray());
+            if (ps.getPedidosBy(atributo, valor).isEmpty()) {
+                res.put("data", new Object[] {});
+            }
+            return Response.ok(res).build();
+        } catch (Exception e) {
+            res.put("estado", "error");
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/list/order/{atributo}/{orden}")
+    public Response ordenarPedidos(@PathParam("atributo") String atributo, @PathParam("orden") Integer orden)
+            throws Exception {
+        HashMap<String, Object> res = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        try {
+            res.put("estado", "Ok");
+            res.put("data", ps.order(atributo, orden).toArray());
+            if (ps.order(atributo, orden).isEmpty()) {
+                res.put("data", new Object[] {});
+            }
+            return Response.ok(res).build();
+        } catch (Exception e) {
+            res.put("estado", "error");
+            res.put("data", "Error interno del servidor: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/tipo_contenido")
+    public Response geTipos() throws ListEmptyException, Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        map.put("msg", "OK");
+        map.put("data", ps.getTipos());
+        return Response.ok(map).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/criterios")
+    public Response getCriterios() throws ListEmptyException, Exception {
+        HashMap<String, Object> map = new HashMap<>();
+        PedidoServices ps = new PedidoServices();
+        map.put("msg", "OK");
+        map.put("data", ps.getPedidoAttributeLists());
+        return Response.ok(map).build();
+    }
 }

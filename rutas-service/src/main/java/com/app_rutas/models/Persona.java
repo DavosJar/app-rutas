@@ -95,4 +95,5 @@ public class Persona {
     public void setSexo(Sexo sexo) {
         this.sexo = sexo;
     }
+
 }

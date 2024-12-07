@@ -12,32 +12,29 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.app_rutas.controller.dao.services.PersonaServices;
+import com.app_rutas.controller.dao.services.ConductorServices;
 import com.app_rutas.controller.excepcion.ListEmptyException;
 
-@Path("/persona")
-public class PersonaApi {
+@Path("/conductor")
+public class ConductorApi {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/list")
     public Response getAllProyects() throws ListEmptyException, Exception {
         HashMap<String, Object> res = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
-        // EventoCrudServices ev = new EventoCrudServices();
+        ConductorServices cs = new ConductorServices();
         try {
             res.put("status", "OK");
             res.put("msg", "Consulta exitosa.");
-            res.put("data", ps.listAll().toArray());
-            if (ps.listAll().isEmpty()) {
+            res.put("data", cs.listAll().toArray());
+            if (cs.listAll().isEmpty()) {
                 res.put("data", new Object[] {});
             }
-            // ev.registrarEvento(TipoCrud.LIST, "Se ha consultado la lista de personas.");
             return Response.ok(res).build();
         } catch (Exception e) {
             res.put("status", "ERROR");
-            res.put("msg", "Error al obtener la lista de personas: " + e.getMessage());
-            // ev.registrarEvento(TipoCrud.LIST, "Error inesperado: " + e.getMessage());
+            res.put("msg", "Error al obtener la lista de conductors: " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(res).build();
         }
     }
@@ -45,15 +42,15 @@ public class PersonaApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/get/{id}")
-    public Response getPersonaById(@PathParam("id") Integer id) throws Exception {
+    public Response getConductorById(@PathParam("id") Integer id) throws Exception {
         HashMap<String, Object> map = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         try {
             map.put("msg", "OK");
-            map.put("data", ps.getPersonaById(id));
-            if (ps.getPersonaById(id) == null) {
+            map.put("data", cs.getConductorById(id));
+            if (cs.getConductorById(id) == null) {
                 map.put("msg", "ERROR");
-                map.put("error", "No se encontro el persona con id: " + id);
+                map.put("error", "No se encontro el conductor con id: " + id);
                 return Response.status(Status.NOT_FOUND).entity(map).build();
             }
             return Response.ok(map).build();
@@ -70,42 +67,47 @@ public class PersonaApi {
     @Produces(MediaType.APPLICATION_JSON)
     public Response save(HashMap<String, Object> map) {
         HashMap<String, Object> res = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
 
         try {
             if (map.get("nombre") == null || map.get("nombre").toString().isEmpty()) {
                 throw new IllegalArgumentException("El campo 'nombre' es obligatorio.");
             }
-            ps.getPersona().setNombre(map.get("nombre").toString());
+            cs.getConductor().setNombre(map.get("nombre").toString());
 
             if (map.get("apellido") == null || map.get("apellido").toString().isEmpty()) {
                 throw new IllegalArgumentException("El campo 'apellido' es obligatorio.");
             }
-            ps.getPersona().setApellido(map.get("apellido").toString());
+            cs.getConductor().setApellido(map.get("apellido").toString());
 
             if (map.get("tipoIdentificacion") != null) {
-                ps.getPersona().setTipoIdentificacion(ps.getTipo(map.get("tipoIdentificacion").toString()));
+                cs.getConductor().setTipoIdentificacion(cs.getTipo(map.get("tipoIdentificacion").toString()));
             }
             if (map.get("identificacion") != null) {
-                ps.getPersona().setIdentificacion(map.get("identificacion").toString());
+                cs.getConductor().setIdentificacion(map.get("identificacion").toString());
             }
             if (map.get("fechaNacimiento") != null) {
-                ps.getPersona().setFechaNacimiento(map.get("fechaNacimiento").toString());
+                cs.getConductor().setFechaNacimiento(map.get("fechaNacimiento").toString());
             }
             if (map.get("direccion") != null) {
-                ps.getPersona().setDireccion(map.get("direccion").toString());
+                cs.getConductor().setDireccion(map.get("direccion").toString());
             }
             if (map.get("telefono") != null) {
-                ps.getPersona().setTelefono(map.get("telefono").toString());
+                cs.getConductor().setTelefono(map.get("telefono").toString());
             }
             if (map.get("email") != null) {
-                ps.getPersona().setEmail(map.get("email").toString());
+                cs.getConductor().setEmail(map.get("email").toString());
             }
             if (map.get("sexo") != null) {
-                ps.getPersona().setSexo(ps.getSexo(map.get("sexo").toString()));
+                cs.getConductor().setSexo(cs.getSexo(map.get("sexo").toString()));
             }
-
-            ps.save();
+            if (map.get("tipoLicencia") != null) {
+                cs.getConductor().setLicenciaConducir(cs.getTiposLicencia(map.get("licenciConducir").toString()));
+            }
+            if (map.get("salario") != null) {
+                cs.getConductor().setSalario(Double.valueOf(map.get("salario").toString()));
+            }
+            cs.save();
             res.put("estado", "Ok");
             res.put("data", "Registro guardado con exito.");
             return Response.ok(res).build();
@@ -126,10 +128,10 @@ public class PersonaApi {
     public Response delete(@PathParam("id") Integer id) throws Exception {
 
         HashMap<String, Object> res = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         try {
-            ps.getPersona().setId(id);
-            ps.delete();
+            cs.getConductor().setId(id);
+            cs.delete();
             res.put("estado", "Ok");
             res.put("data", "Registro eliminado con exito.");
 
@@ -146,8 +148,8 @@ public class PersonaApi {
     @Path("/update")
     public Response update(HashMap<String, Object> map) throws Exception {
         HashMap<String, Object> res = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
-        if (ps.getPersonaById(Integer.valueOf(map.get("id").toString())) != null) {
+        ConductorServices cs = new ConductorServices();
+        if (cs.getConductorById(Integer.valueOf(map.get("id").toString())) != null) {
             try {
                 if (map.get("id") == null || map.get("id").toString().isEmpty()) {
                     throw new IllegalArgumentException("El campo 'id' es obligatorio.");
@@ -180,18 +182,18 @@ public class PersonaApi {
                     throw new IllegalArgumentException("El campo 'sexo' es obligatorio.");
                 }
                 System.out.println("falta alguin dato");
-                ps.setPersona(ps.getPersonaById(Integer.valueOf(map.get("id").toString())));
-                ps.getPersona().setNombre(map.get("nombre").toString());
-                ps.getPersona().setApellido(map.get("apellido").toString());
-                ps.getPersona().setTipoIdentificacion(ps.getTipo(map.get("tipoIdentificacion").toString()));
-                ps.getPersona().setIdentificacion(map.get("identificacion").toString());
-                ps.getPersona().setFechaNacimiento(map.get("fechaNacimiento").toString());
-                ps.getPersona().setDireccion(map.get("direccion").toString());
-                ps.getPersona().setTelefono(map.get("telefono").toString());
-                ps.getPersona().setEmail(map.get("email").toString());
-                ps.getPersona().setSexo(ps.getSexo(map.get("sexo").toString()));
+                cs.setConductor(cs.getConductorById(Integer.valueOf(map.get("id").toString())));
+                cs.getConductor().setNombre(map.get("nombre").toString());
+                cs.getConductor().setApellido(map.get("apellido").toString());
+                cs.getConductor().setTipoIdentificacion(cs.getTipo(map.get("tipoIdentificacion").toString()));
+                cs.getConductor().setIdentificacion(map.get("identificacion").toString());
+                cs.getConductor().setFechaNacimiento(map.get("fechaNacimiento").toString());
+                cs.getConductor().setDireccion(map.get("direccion").toString());
+                cs.getConductor().setTelefono(map.get("telefono").toString());
+                cs.getConductor().setEmail(map.get("email").toString());
+                cs.getConductor().setSexo(cs.getSexo(map.get("sexo").toString()));
 
-                ps.update();
+                cs.update();
                 res.put("estado", "Ok");
                 res.put("data", "Registro actualizado con exito.");
                 return Response.ok(res).build();
@@ -202,7 +204,7 @@ public class PersonaApi {
             }
         } else {
             res.put("estado", "error");
-            res.put("data", "No se encontro el persona con id: " + map.get("id").toString());
+            res.put("data", "No se encontro el conductor con id: " + map.get("id").toString());
             return Response.status(Response.Status.NOT_FOUND).entity(res).build();
         }
     }
@@ -210,15 +212,15 @@ public class PersonaApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/list/search/ident/{identificacion}")
-    public Response searchPersona(@PathParam("identificacion") String identificacion) throws Exception {
+    public Response searchConductor(@PathParam("identificacion") String identificacion) throws Exception {
         HashMap<String, Object> res = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         try {
             res.put("estado", "Ok");
-            res.put("data", ps.obtenerPersonaPor("identificacion", identificacion));
-            if (ps.obtenerPersonaPor(identificacion, ps) == null) {
+            res.put("data", cs.obtenerConductorPor("identificacion", identificacion));
+            if (cs.obtenerConductorPor(identificacion, cs) == null) {
                 res.put("estado", "error");
-                res.put("data", "No se encontro el persona con identificacion: " + identificacion);
+                res.put("data", "No se encontro el conductor con identificacion: " + identificacion);
                 return Response.status(Response.Status.NOT_FOUND).entity(res).build();
             }
             return Response.ok(res).build();
@@ -232,14 +234,14 @@ public class PersonaApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/list/search/{atributo}/{valor}")
-    public Response buscarPersonas(@PathParam("atributo") String atributo, @PathParam("valor") String valor)
+    public Response buscarConductors(@PathParam("atributo") String atributo, @PathParam("valor") String valor)
             throws Exception {
         HashMap<String, Object> res = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         try {
             res.put("estado", "Ok");
-            res.put("data", ps.getPersonasBy(atributo, valor).toArray());
-            if (ps.getPersonasBy(atributo, valor).isEmpty()) {
+            res.put("data", cs.getConductorsBy(atributo, valor).toArray());
+            if (cs.getConductorsBy(atributo, valor).isEmpty()) {
                 res.put("data", new Object[] {});
             }
             return Response.ok(res).build();
@@ -253,14 +255,14 @@ public class PersonaApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/list/order/{atributo}/{orden}")
-    public Response ordenarPersonas(@PathParam("atributo") String atributo, @PathParam("orden") Integer orden)
+    public Response ordenarConductors(@PathParam("atributo") String atributo, @PathParam("orden") Integer orden)
             throws Exception {
         HashMap<String, Object> res = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         try {
             res.put("estado", "Ok");
-            res.put("data", ps.order(atributo, orden).toArray());
-            if (ps.order(atributo, orden).isEmpty()) {
+            res.put("data", cs.order(atributo, orden).toArray());
+            if (cs.order(atributo, orden).isEmpty()) {
                 res.put("data", new Object[] {});
             }
             return Response.ok(res).build();
@@ -276,9 +278,9 @@ public class PersonaApi {
     @Path("/sexo")
     public Response getSexo() throws ListEmptyException, Exception {
         HashMap<String, Object> map = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         map.put("msg", "OK");
-        map.put("data", ps.getSexos());
+        map.put("data", cs.getSexos());
         return Response.ok(map).build();
     }
 
@@ -287,9 +289,9 @@ public class PersonaApi {
     @Path("/tipoidentificacion")
     public Response geTipos() throws ListEmptyException, Exception {
         HashMap<String, Object> map = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         map.put("msg", "OK");
-        map.put("data", ps.getTipos());
+        map.put("data", cs.getTipos());
         return Response.ok(map).build();
     }
 
@@ -298,9 +300,9 @@ public class PersonaApi {
     @Path("/criterios")
     public Response getCriterios() throws ListEmptyException, Exception {
         HashMap<String, Object> map = new HashMap<>();
-        PersonaServices ps = new PersonaServices();
+        ConductorServices cs = new ConductorServices();
         map.put("msg", "OK");
-        map.put("data", ps.getPersonaAttributeLists());
+        map.put("data", cs.getConductorAttributeLists());
         return Response.ok(map).build();
     }
 }

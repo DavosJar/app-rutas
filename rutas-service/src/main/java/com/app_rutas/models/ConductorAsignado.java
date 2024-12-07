@@ -4,21 +4,11 @@ public class ConductorAsignado {
     public Integer id;
     public Integer idConductor;
     public Integer idVehiculo;
-    public Integer idRuta;
     public String fechaAsignacion;
     public String fechaFinalizacion;
     public Estado estado;
 
     public ConductorAsignado() {
-    }
-
-    public ConductorAsignado(Integer idConductor, Integer idVehiculo, Integer idRuta, String fechaAsignacion, String fechaFinalizacion, Estado estado) {
-        this.idConductor = idConductor;
-        this.idVehiculo = idVehiculo;
-        this.idRuta = idRuta;
-        this.fechaAsignacion = fechaAsignacion;
-        this.fechaFinalizacion = fechaFinalizacion;
-        this.estado = estado;
     }
 
     public Integer getId() {
@@ -45,14 +35,6 @@ public class ConductorAsignado {
         this.idVehiculo = idVehiculo;
     }
 
-    public Integer getIdRuta() {
-        return idRuta;
-    }
-
-    public void setIdRuta(Integer idRuta) {
-        this.idRuta = idRuta;
-    }
-
     public String getFechaAsignacion() {
         return fechaAsignacion;
     }
@@ -75,6 +57,6 @@ public class ConductorAsignado {
 
     public void setEstado(Estado estado) {
         this.estado = estado;
-    }    
+    }
 
 }
